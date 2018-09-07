@@ -2,7 +2,8 @@ package com.marcuslavender.myapplication;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
@@ -12,7 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
@@ -20,6 +21,10 @@ import android.widget.Toast;
 import java.io.BufferedWriter;
 import java.io.BufferedReader;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.TreeMap;
+import java.util.ArrayList;
 
 
 import org.w3c.dom.Text;
@@ -30,12 +35,15 @@ import org.w3c.dom.Text;
 
 public class ShowStatement extends AppCompatActivity {
 
-    private Map<String, String> statementHistoryFromFile = new HashMap<>();
-    private Map<String,TextView> statementHistory = new HashMap<>();
-    private TextView aStatement;
+    private List<TreeMap<String,String>> fromFile = new ArrayList<>();
+    private TreeMap<String,String> dateTimeMap = new TreeMap<>();
+    private TextView statementBalance;
     private TextView aStatementAsString;
     private Date date;
     private String currentDate;
+    private String[] statementArray;
+    private TreeSet<String> dates;
+    private TreeSet<String> balances;
 
 
 
@@ -43,7 +51,9 @@ public class ShowStatement extends AppCompatActivity {
    public ShowStatement()
     {
 
-
+        dates = new TreeSet<>();
+        balances = new TreeSet<>();
+        statementArray = new String[50];
 
     }
 
@@ -53,25 +63,46 @@ public class ShowStatement extends AppCompatActivity {
 
 
 
-    public TextView getHistoricalStatement(String date)
+    public void setFromFile(List<TreeMap<String,String>> listOfStatements)
     {
-       return this.statementHistory.get(date);
-
-
+        this.fromFile = listOfStatements;
     }
 
 
-
-
-
-
-    public void setStatementHistory(Map<String,TextView>aStatementHistory)
+    public List<TreeMap<String,String>> getFromFile()
     {
-        this.statementHistory = aStatementHistory;
+        return this.fromFile;
+    }
+
+
+    public String getFromMap(String date)
+    {
+       return this.dateTimeMap.get(date);
+
+
     }
 
 
 
+
+    public void setMapToList(TreeMap<String,String> aStatementHistory)
+    {
+        this.fromFile.add(aStatementHistory);
+    }
+
+
+
+    public void setDateTimeToMap(String date, String balance)
+    {
+        this.dateTimeMap.put(date, balance);
+    }
+
+
+
+    public TreeMap<String, String> getDateTimeMap()
+    {
+        return this.dateTimeMap;
+    }
 
 
 
@@ -81,8 +112,10 @@ public class ShowStatement extends AppCompatActivity {
     }
 
 
-
-
+    public String getCurrentDate()
+    {
+        return this.currentDate;
+    }
 
 
     public void setDate()
@@ -96,10 +129,9 @@ public class ShowStatement extends AppCompatActivity {
 
 
 
-    public String getCurrentDate()
-    {
-        return this.currentDate;
-    }
+
+
+
 
 
 
@@ -119,12 +151,9 @@ public class ShowStatement extends AppCompatActivity {
 
 
 
-
-
-
     public TextView getStatement()
     {
-        return this.aStatement;
+        return this.statementBalance;
     }
 
 
@@ -135,7 +164,7 @@ public class ShowStatement extends AppCompatActivity {
 
     public void setaStatement(TextView aStatement)
     {
-        this.aStatement = aStatement;
+        this.statementBalance = aStatement;
     }
 
 
@@ -153,7 +182,13 @@ public class ShowStatement extends AppCompatActivity {
     }
 
 
+    private String[] splitdateFromBalance(String aDateTimeBalance)
+    {
+        String[]  splitString;
+        splitString = aDateTimeBalance.split(",");
 
+        return splitString;
+    }
 
 
 
@@ -211,9 +246,19 @@ public class ShowStatement extends AppCompatActivity {
             while(aScanner.hasNext())
             {
                 //Need to add a delimiter to split string in to  date and balance
-                // dateAndStatement.split(",");
-                System.out.println(aScanner.next());
-                //this.statementHistory.put()
+                String[] splitString;
+
+
+                splitString = this.splitdateFromBalance(aScanner.next());
+
+                //System.out.println(aScanner.next());
+
+
+
+                this.setDateTimeToMap(splitString[0],splitString[1]);
+
+
+
 
             }
 
@@ -221,7 +266,7 @@ public class ShowStatement extends AppCompatActivity {
             e1.printStackTrace();
         }
 
-
+        this.setMapToList(this.getDateTimeMap());
 
     }
 
@@ -230,19 +275,70 @@ public class ShowStatement extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.showstatement);
-        this.statementHistory.put(this.getCurrentDate(), this.aStatement);
-        this.aStatement = (TextView)findViewById(R.id.editText3);
-        this.aStatement.setText("0");
         this.setCurrentDate();
-        this.writeStatementHistoryToFile("statementHistory", getApplicationContext());
-        //this.aStatement.setText("1");
+
+        //List<TreeMap<String,String>> list = this.getFromFile();
+        //TreeMap<String,String> map = list.get(0);
+
+
+
+        //this.statementBalance = (TextView)findViewById(R.id.textView4);
         this.readFromFileAddtoHistoryMap("statementHistory", getApplicationContext());
 
+       Map<String,String> mapStatements =  this.getFromFile().get(0);
+       Set<String> keys = mapStatements.keySet();
 
+       for(String key : keys) {
+           System.out.println(this.getFromMap(key));
+           String balance = this.getFromMap(key);
 
+           dates.add(key);
+           balances.add(mapStatements.get(key));
 
+           //this.getStatement().setText(balance);
+
+       }
+
+       //Convert Sets to Array's
+        int count = 0;
+        for(String aString1 : dates)
+        {
+            for(String aString2 : balances) {
+                String date;
+                String balance;
+
+                date = aString1;
+                balance = aString2;
+
+                this.statementArray[count] = date + "," + balance;
+            }
+            count ++;
+        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1,  statementArray);
+
+        ListView listView = (ListView) findViewById(R.id.listview);
+        listView.setAdapter(adapter);
 
     }
+
+
+
+
+
+
+
+
+    protected void onPause()
+    {
+        super.onPause();
+        this.writeStatementHistoryToFile("statementHistory", getApplicationContext());
+
+    }
+
+
+
 
 
 }
