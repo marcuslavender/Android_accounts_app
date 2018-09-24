@@ -51,6 +51,7 @@ public class MainMenu extends AppCompatActivity {
                     case 2:
                         description = "Deposit Money";
                         Intent intent3 = new Intent(MainMenu.this, DepositMoney.class);
+                        startActivity(intent3);
                     break;
 
                     case 3:
